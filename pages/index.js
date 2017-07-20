@@ -7,14 +7,19 @@ import NotifyContainer from '../components/NotifyContainer';
 import Container from '../components/Container';
 import Countdown from '../containers/Countdown';
 import post from '../utils/postData';
+import Cookies from 'js-cookie';
 import { SECRET_MESSAGE } from '../config';
 
 require('../utils/globalStyles');
 
 export default class extends Component {
-    static async getInitialProps() {
+    static async getInitialProps({ req }) {
+
+        const cookie = req.headers.cookie;
+
         return {
-            secret: SECRET_MESSAGE
+            secret: SECRET_MESSAGE,
+            resolvedBefore: cookie
         }
     }
 
@@ -28,20 +33,10 @@ export default class extends Component {
             inputValue: '',
             secretResolved: false,
             resolvedBefore: false,
-            loading: true,
             counting: false,
             attempt: false,
             error: false
         };
-    }
-
-    componentDidMount() {
-        const resolvedBefore = localStorage.getItem('secret');
-
-        this.setState({
-            resolvedBefore,
-            loading: false
-        });
     }
 
     setGlobalstate(obj) {
@@ -63,7 +58,7 @@ export default class extends Component {
     async handleSubmit() {
         if(this.state.inputValue === this.props.secret) {
 
-            localStorage.setItem('secret', true);
+            Cookies.set('secret', true);
 
             try {
                 this.setState({
@@ -91,10 +86,6 @@ export default class extends Component {
     render() {
         const { inputValue, secretResolved, resolvedBefore, loading, counting, attempt } = this.state;
 
-        if(loading) {
-            return <App></App>;
-        }
-
         if(counting) {
             return (
                 <App>
@@ -106,7 +97,7 @@ export default class extends Component {
         return (
             <App>
                 {
-                    (!secretResolved && !resolvedBefore)
+                    (!secretResolved && !this.props.resolvedBefore)
                     ?
                         <Container>
                             <Puzzle value={inputValue}
